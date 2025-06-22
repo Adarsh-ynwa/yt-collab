@@ -5,10 +5,13 @@ export default function (io) {
   io.on("connection", (socket) => {
     console.log(`✅ User connected: ${socket.id}`);
 
-    socket.on("join-room", (roomId) => {
+    socket.on("join-room", async (roomId) => {
       if (!roomId) return;
       socket.join(roomId);
       console.log(`📺 ${socket.id} joined room ${roomId}`);
+
+      const socketsInRoom = await io.in(roomId).allSockets();
+      console.log(`🧠 Current sockets in room ${roomId}:`, [...socketsInRoom]);
     });
 
     socket.on("play-video", ({ roomId }) => {
@@ -29,6 +32,14 @@ export default function (io) {
       socket.to(roomId).emit("video-seek", { time });
     });
 
+    // ✅ New event: change-video
+    socket.on("change-video", ({ roomId, url }) => {
+      if (!roomId || !url) return;
+
+      console.log(`🔄 change-video in ${roomId}: ${url}`);
+      io.to(roomId).emit("change-video", { url });
+    });
+
     socket.on("send-message", async ({ roomId, message }) => {
       if (!roomId || !message?.text) return;
 
@@ -39,10 +50,8 @@ export default function (io) {
         timestamp: new Date(),
       };
 
-      // Emit to other users
       socket.to(roomId).emit("receive-message", chatMessage);
 
-      // Save message to DB
       try {
         await Chat.create(chatMessage);
         console.log(`💬 Message saved in room ${roomId}: ${message.text}`);

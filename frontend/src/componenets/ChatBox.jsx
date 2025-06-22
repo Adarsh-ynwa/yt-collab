@@ -6,6 +6,10 @@ const ChatBox = ({ roomId }) => {
   const [messages, setMessages] = useState([]);
   const [msg, setMsg] = useState('');
 
+  // ✅ Fetch username from localStorage
+  const username =
+    typeof window !== 'undefined' ? localStorage.getItem('username') || 'Anonymous' : 'Anonymous';
+
   useEffect(() => {
     if (!roomId) return;
 
@@ -25,7 +29,7 @@ const ChatBox = ({ roomId }) => {
   const sendMessage = () => {
     if (msg.trim()) {
       const messageObj = {
-        sender: 'You',
+        sender: username,
         text: msg,
       };
 
@@ -47,28 +51,38 @@ const ChatBox = ({ roomId }) => {
   };
 
   return (
-    <div className="mt-4 border rounded p-3 max-w-md bg-white text-black">
-      <h3 className="font-bold mb-2">💬 Chat</h3>
-      <div className="h-40 overflow-y-auto border p-2 mb-2 bg-gray-100 rounded">
-        {messages.map((m, i) => (
-          <div key={i} className="text-sm mb-1">
-            <strong>{m.sender}</strong>: {m.text}{' '}
-            <span className="text-xs text-gray-500">({m.timestamp})</span>
-          </div>
-        ))}
+    <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col h-[400px]">
+      <h3 className="font-bold text-lg text-gray-900 mb-3">💬 Live Chat</h3>
+
+      <div className="flex-1 overflow-y-auto space-y-2 px-1 pr-2 scrollbar-thin scrollbar-thumb-gray-300">
+        {messages.map((m, i) => {
+          const isCurrentUser = m.sender === username;
+          const displayName = isCurrentUser ? 'You' : m.sender;
+
+          return (
+            <div key={i} className="text-sm bg-gray-100 p-2 rounded-md">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-blue-600">{displayName}</span>
+                <span className="text-xs text-gray-500">{m.timestamp}</span>
+              </div>
+              <p className="text-gray-800">{m.text}</p>
+            </div>
+          );
+        })}
       </div>
-      <div className="flex gap-2">
+
+      <div className="mt-3 flex gap-2">
         <input
           type="text"
-          className="flex-1 border rounded p-1"
+          className="flex-1 border border-gray-300 text-gray-900 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          placeholder="Type your message..."
           value={msg}
           onChange={(e) => setMsg(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Type your message..."
         />
         <button
           onClick={sendMessage}
-          className="bg-blue-500 text-white px-3 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           Send
         </button>
